@@ -2,24 +2,40 @@ import React,{useState,useEffect} from 'react'
 import { useNavigate, Link } from "react-router-dom";
 import { Sparkle, Star, SunMoon, ArrowBigLeft } from "lucide-react";
 import { auth, provider, signInWithPopup } from "../config/Firebase";
+import axios from "axios"
 
 const IntroductionPage = () => {
 const [userName, setUserName] = useState("");
 
   const navigate = useNavigate(); 
 
-  const handleLogin = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      setUserName(user.displayName); // fetch just the name
+ const handleLogin = async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    const name = user.displayName;
 
-      // Navigate to /home and pass username via state
-      navigate("/home", { state: { userName: user.displayName } });
-    } catch (error) {
-      console.error("Login error:", error);
-    }
-  };
+    setUserName(name);
+
+    // 🔥 Call backend to create/get user
+    const res = await axios.post("http://localhost:5000/api/users", { name }); // Adjust baseURL if deploying
+
+    console.log("User saved or fetched from DB:", res.data);
+
+    // Optionally store user id in localStorage
+    localStorage.setItem("astroUser", JSON.stringify(res.data));
+
+    // Navigate to home with user data
+    navigate("/home", { state: { user: res.data } });
+
+  } catch (error) {
+    console.error("Login error:", error);
+  }
+};
+
+
+
+
  return (
    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-indigo-950 to-purple-950 text-white px-4 sm:px-8 py-10 flex flex-col items-center relative overflow-hidden">
       {/* Background Sparkles */}

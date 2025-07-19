@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Link,useLocation } from "react-router-dom";
+import { Link, useLocation,useNavigate } from "react-router-dom";
 import {
   Sparkle,
   Star,
@@ -11,10 +11,16 @@ import {
   Moon,
   Sun,
 } from "lucide-react";
+import { signOut } from "firebase/auth";
+import { auth } from "../config/Firebase";
 
 const Home = () => {
+  const navigate = useNavigate();
+
   const location = useLocation();
   const userName = location.state?.userName || "Guest";
+  const [user, setUser] = useState({ zodiacSign: null });
+
   const [apod, setApod] = useState(null);
   const [sign, setSign] = useState("Leo");
   const [horoscope, setHoroscope] = useState(null);
@@ -137,6 +143,17 @@ const Home = () => {
     }
   }, [loadingHoroscope]);
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      console.log("User logged out");
+      // Optionally redirect to landing page
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
   // Scroll reveal animation
   useEffect(() => {
     const elements = document.querySelectorAll(".animate-on-scroll");
@@ -157,10 +174,7 @@ const Home = () => {
   }, []);
 
   // Toggle dark/light mode
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
+  
   // Mock save horoscope
   const handleSave = () => {
     setSaved(true);
@@ -205,11 +219,7 @@ const Home = () => {
       {/* Header */}
       <header className="w-full py-4 px-4 sm:px-6 flex justify-between items-center bg-gray-900/90 dark:bg-gray-900/90 backdrop-blur-md sticky top-0 z-20 shadow-lg">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
-          <Sparkle
-            size={24}
-            className="text-violet-400 animate-pulse"
-           
-          />
+          <Sparkle size={24} className="text-violet-400 animate-pulse" />
           AstroGaze
         </h1>
         <nav
@@ -217,17 +227,25 @@ const Home = () => {
           aria-label="Main navigation"
           className="flex gap-2 sm:gap-4"
         >
-          <Link to="/" >
+          <Link to="/">
             <button className="bg-violet-500 text-white font-medium px-4 sm:px-6 py-2 rounded-full shadow-md hover:bg-violet-400 transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-violet-300">
               Landing
             </button>
           </Link>
-          <Link to="/compatibility" >
+          <Link to="/compatibility">
             <button className="bg-white/10 text-white font-medium px-4 sm:px-6 py-2 rounded-full shadow-md hover:bg-white/20 transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-violet-300">
               Compatibility
             </button>
           </Link>
+
           <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white font-medium px-4 sm:px-6 py-2 rounded-full shadow-md hover:bg-red-400 transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-300"
+          >
+            Logout
+          </button>
+
+          {/* <button
             onClick={toggleTheme}
             className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition duration-300 focus:outline-none focus:ring-2 focus:ring-violet-300"
             aria-label={
@@ -235,10 +253,15 @@ const Home = () => {
             }
           >
             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
+          </button> */}
         </nav>
       </header>
-       <h1 className="text-3xl font-bold p-4 justify-start  items-left ml-0">Welcome, {userName}!</h1>
+      <div className="p-4">
+        <h1 className="text-3xl font-bold p-4 justify-start  items-left ml-0">
+          Welcome, {userName}!
+        </h1>
+        <p>Your saved zodiac: {user?.zodiacSign || "None yet"}</p>
+      </div>
 
       {/* <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
         <h1 className="text-3xl font-bold">Welcome, {userName}!</h1>
@@ -246,12 +269,12 @@ const Home = () => {
 
       {/* Main Content */}
       <main className="flex-grow px-4 sm:px-6 py-6 sm:py-16 max-w-4xl mx-auto space-y-16 relative z-10">
-         {/* <h1 className="text-3xl font-bold">Welcome, {userName}!</h1> */}
+        {/* <h1 className="text-3xl font-bold">Welcome, {userName}!</h1> */}
         {/* NASA APOD Section */}
-          
+
         <section className="text-center animate-on-scroll opacity-0 translate-y-8 transition-all duration-700">
           <h2 className="text-2xl sm:text-3xl font-bold  flex items-center justify-center gap-2">
-            <SunMoon size={28} className="text-violet-400"  />
+            <SunMoon size={28} className="text-violet-400" />
             Astronomy Picture of the Day
           </h2>
           {loadingApod ? (
